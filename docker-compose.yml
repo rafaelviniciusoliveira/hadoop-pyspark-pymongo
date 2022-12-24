@@ -1,0 +1,74 @@
+version: '3.9'
+
+networks:
+  hadoop_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/24
+
+services:
+  node-master:
+    container_name: node-master
+    hostname: node-master
+    image: hadoopcluster/hadoop:3.3.4
+    build: .
+    tty: true
+    networks:
+      hadoop_network:
+        ipv4_address: 172.18.0.2
+    ports:
+      - 9870:9870
+      - 8088:8088
+      - 18080:18080
+    command: /root/config_files/bootstrap.sh
+    volumes: 
+      - ./apps:/root/apps
+
+  slave1:
+    container_name: slave1
+    hostname: slave1
+    image: hadoopcluster/hadoop:3.3.4
+    build: .
+    tty: true
+    networks:
+      hadoop_network:
+        ipv4_address: 172.18.0.3
+    depends_on:
+      - node-master
+    command: /root/config_files/bootstrap.sh
+    volumes: 
+      - ./apps:/root/apps
+
+  slave2:
+    container_name: slave2
+    hostname: slave2
+    image: hadoopcluster/hadoop:3.3.4
+    build: .
+    tty: true
+    networks:
+      hadoop_network:
+        ipv4_address: 172.18.0.4
+    depends_on:
+      - node-master
+    command: /root/config_files/bootstrap.sh
+    volumes: 
+      - ./apps:/root/apps
+
+  mongo:
+    image: mongo
+    restart: always
+    container_name: mongo-teste
+    ports:
+      - 27017:27017
+    networks:
+      hadoop_network:
+        ipv4_address: 172.18.0.5
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  mongodata:
+    
+
